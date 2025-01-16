@@ -3,9 +3,13 @@ import { useEffect, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import { setTranslateUrl } from "../pocket";
 
+import type { Mode } from "@/lib/translation/constants";
+import { getNextChapterUrl, getPreviousChapterUrl } from "@/lib/utils";
+
 const Translate: React.FC<{ initialUrl: string }> = ({ initialUrl }) => {
   const [fontSize, setFontSize] = useLocalStorage("fontSize", 3);
   const [isDarkMode, setIsDarkMode] = useLocalStorage("darkMode", false);
+  const [mode, setMode] = useLocalStorage<Mode>("mode", "wuxia");
   const [ignoreCache, setIgnoreCache] = useState(false);
 
   useEffect(() => {
@@ -28,6 +32,7 @@ const Translate: React.FC<{ initialUrl: string }> = ({ initialUrl }) => {
     initialInput: initialUrl,
     body: {
       ignoreCache,
+      mode,
     },
   });
 
@@ -37,21 +42,14 @@ const Translate: React.FC<{ initialUrl: string }> = ({ initialUrl }) => {
     }
   }, [input]);
 
-  async function goToChapter(change: number) {
+  async function goToChapter(direction: "next" | "previous") {
     stop();
 
-    // Example input `https://truyenyy.vip/truyen/thinh-cong-tu-tram-yeu/chuong-309.html`
-    // Get chapter number from url using regex
-    const chapterNumber = input.match(/\d+/)?.[0];
-
-    // Change chapter number by change value
-    const newChapterNumber = Number(chapterNumber) + change;
-
     // Replace chapter number in url
-    const newUrl = input.replace(
-      String(chapterNumber),
-      newChapterNumber.toString()
-    );
+    const newUrl =
+      direction === "next"
+        ? getNextChapterUrl(input)
+        : getPreviousChapterUrl(input);
 
     setInput(newUrl);
     complete(newUrl);
@@ -115,43 +113,84 @@ const Translate: React.FC<{ initialUrl: string }> = ({ initialUrl }) => {
           </div>
         </form>
 
-        <div className="flex justify-end gap-2 px-4 items-center">
-          <div className="flex items-center gap-2 mr-auto">
-            <input
-              type="checkbox"
-              id="ignoreCache"
-              checked={ignoreCache}
-              onChange={(e) => setIgnoreCache(e.target.checked)}
-              className="rounded border-gray-300 dark:border-gray-600 scale-125"
-            />
-            <label
-              htmlFor="ignoreCache"
-              className="text-gray-700 dark:text-gray-300 text-lg"
-            >
-              Ignore Cache
-            </label>
+        <div className="flex flex-col sm:flex-row justify-end gap-4 sm:gap-2 px-4 items-start sm:items-center">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-2 w-full sm:mr-auto">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="ignoreCache"
+                checked={ignoreCache}
+                onChange={(e) => setIgnoreCache(e.target.checked)}
+                className="rounded border-gray-300 dark:border-gray-600 scale-125"
+              />
+              <label
+                htmlFor="ignoreCache"
+                className="text-gray-700 dark:text-gray-300 text-lg"
+              >
+                Ignore Cache
+              </label>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4 ml-0 md:ml-8">
+              <div className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  id="wuxia"
+                  name="mode"
+                  value="wuxia"
+                  checked={mode === "wuxia"}
+                  onChange={(e) => setMode(e.target.value as Mode)}
+                  className="scale-125"
+                />
+                <label
+                  htmlFor="wuxia"
+                  className="text-gray-700 dark:text-gray-300"
+                >
+                  Wuxia
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  id="fantasy"
+                  name="mode"
+                  value="fantasy_translate"
+                  checked={mode === "fantasy_translate"}
+                  onChange={(e) => setMode(e.target.value as Mode)}
+                  className="scale-125"
+                />
+                <label
+                  htmlFor="fantasy"
+                  className="text-gray-700 dark:text-gray-300"
+                >
+                  Fantasy
+                </label>
+              </div>
+            </div>
           </div>
-          <button
-            onClick={decreaseFontSize}
-            type="button"
-            className="bg-gray-200 dark:bg-gray-700 dark:text-white px-3 py-1 rounded hover:bg-opacity-80"
-          >
-            A-
-          </button>
-          <button
-            onClick={increaseFontSize}
-            type="button"
-            className="bg-gray-200 dark:bg-gray-700 dark:text-white px-3 py-1 rounded hover:bg-opacity-80"
-          >
-            A+
-          </button>
-          <button
-            onClick={toggleTheme}
-            type="button"
-            className="bg-gray-200 dark:bg-gray-700 dark:text-white px-3 py-1 rounded hover:bg-opacity-80"
-          >
-            {isDarkMode ? "☀️" : "🌙"}
-          </button>
+          <div className="flex gap-2 w-full sm:w-auto justify-end">
+            <button
+              onClick={decreaseFontSize}
+              type="button"
+              className="bg-gray-200 dark:bg-gray-700 dark:text-white px-3 py-1 rounded hover:bg-opacity-80"
+            >
+              A-
+            </button>
+            <button
+              onClick={increaseFontSize}
+              type="button"
+              className="bg-gray-200 dark:bg-gray-700 dark:text-white px-3 py-1 rounded hover:bg-opacity-80"
+            >
+              A+
+            </button>
+            <button
+              onClick={toggleTheme}
+              type="button"
+              className="bg-gray-200 dark:bg-gray-700 dark:text-white px-3 py-1 rounded hover:bg-opacity-80"
+            >
+              {isDarkMode ? "☀️" : "🌙"}
+            </button>
+          </div>
         </div>
 
         <div
@@ -193,14 +232,14 @@ const Translate: React.FC<{ initialUrl: string }> = ({ initialUrl }) => {
           <button
             type="button"
             className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-            onClick={() => goToChapter(-1)}
+            onClick={() => goToChapter("previous")}
           >
             Previous Chapter
           </button>
           <button
             type="button"
             className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-            onClick={() => goToChapter(1)}
+            onClick={() => goToChapter("next")}
           >
             Next Chapter
           </button>
