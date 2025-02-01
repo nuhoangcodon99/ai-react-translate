@@ -1,7 +1,7 @@
 import { useCompletion } from "ai/react";
 import { useEffect, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
-import { setTranslateUrl } from "../pocket";
+import { setTranslateUrl, addLink } from "../pocket";
 
 import type { Mode } from "@/lib/translation/constants";
 import { getNextChapterUrl, getPreviousChapterUrl } from "@/lib/utils";
@@ -36,9 +36,12 @@ const Translate: React.FC<{ initialUrl: string }> = ({ initialUrl }) => {
     },
   });
 
+  console.log({ error });
+
   useEffect(() => {
     if (input) {
       setTranslateUrl(input);
+      addLink(input);
     }
   }, [input]);
 
