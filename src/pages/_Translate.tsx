@@ -1,4 +1,4 @@
-import { useCompletion } from "ai/react";
+import { useCompletion } from "@ai-sdk/react";
 import { useEffect, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import { setTranslateUrl, addLink } from "../pocket";
@@ -9,7 +9,7 @@ import { getNextChapterUrl, getPreviousChapterUrl } from "@/lib/utils";
 const Translate: React.FC<{ initialUrl: string }> = ({ initialUrl }) => {
   const [fontSize, setFontSize] = useLocalStorage("fontSize", 3);
   const [isDarkMode, setIsDarkMode] = useLocalStorage("darkMode", false);
-  const [mode, setMode] = useLocalStorage<Mode>("mode", "wuxia");
+  const [mode, setMode] = useLocalStorage<Mode>("mode", "light_novel");
   const [ignoreCache, setIgnoreCache] = useState(false);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ const Translate: React.FC<{ initialUrl: string }> = ({ initialUrl }) => {
     },
   });
 
-  console.log({ error });
+  console.error({ error });
 
   useEffect(() => {
     if (input) {
@@ -135,6 +135,23 @@ const Translate: React.FC<{ initialUrl: string }> = ({ initialUrl }) => {
             </div>
 
             <div className="flex flex-wrap items-center gap-4 ml-0 md:ml-8">
+              <div className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  id="light_novel"
+                  name="mode"
+                  value="light_novel"
+                  checked={mode === "light_novel"}
+                  onChange={(e) => setMode(e.target.value as Mode)}
+                  className="scale-125"
+                />
+                <label
+                  htmlFor="light_novel"
+                  className="text-gray-700 dark:text-gray-300"
+                >
+                  Light Novel
+                </label>
+              </div>
               <div className="flex items-center gap-2">
                 <input
                   type="radio"
